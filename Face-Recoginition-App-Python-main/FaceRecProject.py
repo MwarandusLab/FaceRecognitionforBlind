@@ -24,22 +24,23 @@ def process_known_face(name, x1, y1, x2, y2):
 
 
 def process_unknown_face(x1, y1, x2, y2):
-    speak("Face not found on the database. Would you like to add this person to the database?")
-    # Uncomment the following line if you want to draw a rectangle around the face
-    # cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
-    # cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 0, 255), cv2.FILLED)
-    # cv2.putText(img, "Unknown", (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+    speak("Face not found on the database.")
+    cv2.rectangle(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
+    cv2.rectangle(img, (x1, y2 - 35), (x2, y2), (0, 0, 255), cv2.FILLED)
+    cv2.putText(img, "Unknown", (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
 
 
 def add_new_person():
     r = sr.Recognizer()
     with sr.Microphone() as source:
         speak("Please say the name of the person")
+        r.adjust_for_ambient_noise(source)  # Adjust for ambient noise before listening
         audio = r.listen(source)
 
     try:
         text = r.recognize_google(audio)
-        name = text[text.find("is") + 3: text.find("save")].strip()
+        print(f"Recognized Text: {text}")  # Debug information
+        name = text.strip()
         speak(f"The name of the person is {name}. Face will be saved on the database.")
         # Capture face and save it
         face_image = "ImagesAttendance/" + name + ".jpg"  # Path to save the image
@@ -103,19 +104,20 @@ while True:
             process_known_face(name, x1, y1, x2, y2)
         else:
             process_unknown_face(x1, y1, x2, y2)
-            # Wait for 5 seconds for user response
-            time.sleep(5)
+            time.sleep(1)  # Short pause before asking the question
             speak("Would you like to add this person to the database?")
+
             with sr.Microphone() as source:
-                r.adjust_for_ambient_noise(source)  # Adjust noise levels before listening
+                r.adjust_for_ambient_noise(source)  # Adjust for ambient noise before listening
+                print("Listening for response...")  # Debug information
                 audio = r.listen(source)
+
             try:
                 response = r.recognize_google(audio).lower()
+                print(f"Recognized Response: {response}")  # Debug information
                 if "yes" in response:
                     new_name = add_new_person()
                     if new_name:
-                        # Assuming successful addition of new face to the database
-                        # Update the encodeListKnown and classNames accordingly
                         encodeListKnown.append(encodeFace)
                         classNames.append(new_name)
                         speak("Database updated. Restarting the system.")
